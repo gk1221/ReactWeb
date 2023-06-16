@@ -7,6 +7,7 @@ import reportWebVitals from './reportWebVitals';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
+    It's {5>2 ? <div>dick</div>:<div>NOW</div>}
     <App />
   </React.StrictMode>
 );
