@@ -53,38 +53,59 @@ const average = (arr) =>
 const KEY = "56f48927";
 
 export default function App() {
+  const [query, setQuery] = useState("inception");
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const query = "interstellar";
+  const [selectedId, setSelectedId] = useState(null);
+  /*
+  useEffect(function () {
+    console.log("After initial");
+  }, []);
 
   useEffect(function () {
-    async function fetchMovies() {
-      try {
-        setIsLoading(true);
-        const res = await fetch(
-          `http://www.omdbapi.com/?&apikey=${KEY}&s=${query}`
-        );
+    console.log("After every render");
+  });
+  console.log("During render");
+*/
+  function handleSelectMovie(id) {
+    setSelectedId(id);
+  }
 
-        if (!res.ok) throw new Error("Something went wrong here");
+  useEffect(
+    function () {
+      async function fetchMovies() {
+        try {
+          setIsLoading(true);
+          const res = await fetch(
+            `http://www.omdbapi.com/?&apikey=${KEY}&s=${query}`
+          );
 
-        const data = await res.json();
-        setMovies(data.Search);
-        console.log(data.Search);
-        setIsLoading(false);
-      } catch (err) {
-        console.error(err.message);
-        setError(err.message);
+          if (!res.ok) throw new Error("Something went wrong here");
+
+          const data = await res.json();
+          setMovies(data.Search);
+          setIsLoading(false);
+        } catch (err) {
+          console.error(err.message);
+          setError(err.message);
+        }
       }
-    }
-    fetchMovies();
-  }, []);
+      if (query.length < 3) {
+        setMovies([]);
+        setError("");
+        return;
+      }
+      fetchMovies();
+    },
+    [query]
+  );
 
   return (
     <>
       <NavBar movies={movies}>
-        <Search />
+        <Search query={query} setQuery={setQuery} />
         <NumResults movies={movies} />
       </NavBar>
       <Main movies={movies}>
@@ -100,8 +121,14 @@ export default function App() {
 
         <Box>
           <>
-            <WatchedSummary watched={watched} />
-            <WatchedMovieList watched={watched} />
+            {selectedId ? (
+              <MovieDetails selectedId={selectedId} />
+            ) : (
+              <>
+                <WatchedSummary watched={watched} />
+                <WatchedMovieList watched={watched} />
+              </>
+            )}
           </>
         </Box>
       </Main>
@@ -140,8 +167,7 @@ function Logo() {
   );
 }
 
-function Search() {
-  const [query, setQuery] = useState("");
+function Search({ query, setQuery }) {
   return (
     <input
       className="search"
@@ -212,6 +238,10 @@ function Box({ children }) {
   );
 }
 
+function MovieDetails({ selectedId }) {
+  return <div className="detail">{selectedId}</div>;
+}
+
 function WatchedSummary({ watched }) {
   const avgImdbRating = average(watched.map((movie) => movie.imdbRating));
   const avgUserRating = average(watched.map((movie) => movie.userRating));
@@ -250,14 +280,14 @@ function MovieList({ movies }) {
     </ul>
   );
 }
-function Movie({ movie }) {
+function Movie({ movie, handleSelectMovie }) {
   return (
-    <li key={movie.imdbID}>
+    <li onClick={handleSelectMovie} key={movie.imdbID}>
       <img src={movie.Poster} alt={`${movie.Title} poster`} />
       <h3>{movie.Title}</h3>
       <div>
         <p>
-          <span>🗓</span>
+          <span>🀄</span>
           <span>{movie.Year}</span>
         </p>
       </div>
